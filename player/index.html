@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Powerbank Regeln im Flugzeug</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: translateY(-16px);
+      animation: fadeDown 0.6s ease forwards 0.1s;
+    }
+    .badge {
+      background: #ffc107;
+      color: #000;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      padding: 4px 10px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: clamp(16px, 2.5vw, 22px);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .header h1 span { color: #ffc107; }
+
+    /* ── Player shell ── */
+    .player-wrap {
+      width: 100%;
+      max-width: 960px;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.7s ease forwards 0.25s;
+      position: relative;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16/9;
+      background: #000;
+      outline: none;
+    }
+
+    /* ── Custom controls bar ── */
+    .controls {
+      background: #161616;
+      padding: 12px 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Progress */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .time { font-size: 12px; color: #aaa; min-width: 40px; text-align: center; }
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: height 0.15s;
+    }
+    .progress-bar:hover { height: 6px; }
+    .progress-fill {
+      height: 100%;
+      background: #ffc107;
+      border-radius: 2px;
+      width: 0%;
+      pointer-events: none;
+      transition: width 0.1s linear;
+    }
+    .progress-bar input[type=range] {
+      position: absolute;
+      inset: -6px 0;
+      width: 100%;
+      height: calc(100% + 12px);
+      opacity: 0;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    /* Buttons row */
+    .buttons-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      padding: 6px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    button:hover { background: rgba(255,255,255,0.08); }
+    button svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .spacer { flex: 1; }
+
+    .vol-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    input[type=range].vol {
+      width: 70px;
+      accent-color: #ffc107;
+      cursor: pointer;
+    }
+
+    /* Speed badge */
+    #speedBtn {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffc107;
+      padding: 4px 8px;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+    #speedBtn:hover { border-color: #ffc107; }
+
+    /* ── Chapter list ── */
+    .chapters {
+      width: 100%;
+      max-width: 960px;
+      margin-top: 28px;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeUp 0.7s ease forwards 0.45s;
+    }
+    .chapters h2 {
+      font-size: 13px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .chapter-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .chapter-item {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 7px;
+      padding: 12px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .chapter-item:hover { background: #191919; border-color: #333; }
+    .chapter-item.active { border-color: #ffc107; background: #1a1600; }
+    .ch-num {
+      background: #ffc107;
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      width: 26px;
+      height: 26px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .chapter-item.active .ch-num { background: #ffc107; }
+    .ch-info { flex: 1; }
+    .ch-title { font-size: 13px; font-weight: 600; }
+    .ch-sub   { font-size: 11px; color: #666; margin-top: 2px; }
+    .ch-time  { font-size: 11px; color: #555; flex-shrink: 0; }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      to { opacity:1; transform:translateY(0); }
+    }
+    @keyframes fadeUp {
+      to { opacity:1; transform:translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">Reise-Wissen</div>
+    <h1>Powerbank-Regeln im Flugzeug — <span>Was du wissen musst</span></h1>
+  </div>
+
+  <div class="player-wrap">
+    <video id="vid" preload="metadata">
+      <source src="powerbank_final.mp4" type="video/mp4" />
+    </video>
+
+    <div class="controls">
+      <!-- Progress -->
+      <div class="progress-row">
+        <span class="time" id="curTime">0:00</span>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+          <input type="range" id="seekBar" min="0" max="100" value="0" step="0.1" />
+        </div>
+        <span class="time" id="durTime">3:33</span>
+      </div>
+
+      <!-- Buttons -->
+      <div class="buttons-row">
+        <!-- Play/Pause -->
+        <button id="playBtn" title="Play / Pause">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+
+        <!-- Skip -10 -->
+        <button id="skipBack" title="-10s">
+          <svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="8.5" y="16" font-size="5" font-family="sans-serif" fill="white">10</text></svg>
+        </button>
+
+        <!-- Skip +10 -->
+        <button id="skipFwd" title="+10s">
+          <svg viewBox="0 0 24 24"><path d="M12 5V2l5 5-5 5V9c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/><text x="8.5" y="16" font-size="5" font-family="sans-serif" fill="white">10</text></svg>
+        </button>
+
+        <div class="spacer"></div>
+
+        <!-- Volume -->
+        <div class="vol-wrap">
+          <button id="muteBtn" title="Mute">
+            <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <input type="range" class="vol" id="volBar" min="0" max="1" step="0.02" value="1" />
+        </div>
+
+        <!-- Speed -->
+        <button id="speedBtn" title="Playback speed">1×</button>
+
+        <!-- Fullscreen -->
+        <button id="fsBtn" title="Fullscreen">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapter list -->
+  <div class="chapters">
+    <h2>Kapitel</h2>
+    <div class="chapter-list" id="chapterList"></div>
+  </div>
+
+  <script>
+    const vid = document.getElementById('vid');
+    const playBtn  = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    const seekBar  = document.getElementById('seekBar');
+    const progressFill = document.getElementById('progressFill');
+    const curTime  = document.getElementById('curTime');
+    const durTime  = document.getElementById('durTime');
+    const skipBack = document.getElementById('skipBack');
+    const skipFwd  = document.getElementById('skipFwd');
+    const muteBtn  = document.getElementById('muteBtn');
+    const volBar   = document.getElementById('volBar');
+    const speedBtn = document.getElementById('speedBtn');
+    const fsBtn    = document.getElementById('fsBtn');
+    const chapterList = document.getElementById('chapterList');
+
+    // ── Chapters ──────────────────────────────────────────────────────────
+    const CHAPTERS = [
+      { t: 0,   label: 'INTRO',   sub: 'Powerbank-Regeln im Flugzeug' },
+      { t: 25,  label: 'TEIL 1',  sub: 'Die IATA 100-Wh-Grenze' },
+      { t: 55,  label: 'TEIL 2',  sub: 'Warum Lithium-Akkus gefährlich sind' },
+      { t: 90,  label: 'TEIL 3',  sub: 'Wattstunden selbst berechnen' },
+      { t: 130, label: 'TEIL 4',  sub: 'Konfisziert – was passiert dann?' },
+      { t: 165, label: 'TEIL 5',  sub: 'Tipps für stressfreies Reisen' },
+    ];
+
+    function fmt(s) {
+      const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+      return `${m}:${String(sec).padStart(2,'0')}`;
+    }
+
+    CHAPTERS.forEach((ch, i) => {
+      const el = document.createElement('div');
+      el.className = 'chapter-item';
+      el.dataset.t = ch.t;
+      el.innerHTML = `
+        <div class="ch-num">${i + 1}</div>
+        <div class="ch-info">
+          <div class="ch-title">${ch.label}</div>
+          <div class="ch-sub">${ch.sub}</div>
+        </div>
+        <div class="ch-time">${fmt(ch.t)}</div>`;
+      el.addEventListener('click', () => { vid.currentTime = ch.t; vid.play(); });
+      chapterList.appendChild(el);
+    });
+
+    function updateActiveChapter() {
+      const t = vid.currentTime;
+      let active = 0;
+      CHAPTERS.forEach((ch, i) => { if (t >= ch.t) active = i; });
+      document.querySelectorAll('.chapter-item').forEach((el, i) => {
+        el.classList.toggle('active', i === active);
+      });
+    }
+
+    // ── Playback icons ─────────────────────────────────────────────────────
+    const PLAY_PATH  = 'M8 5v14l11-7z';
+    const PAUSE_PATH = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+    const VOL_PATH   = 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z';
+    const MUTE_PATH  = 'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z';
+
+    function setPlayIcon(playing) {
+      playIcon.querySelector('path').setAttribute('d', playing ? PAUSE_PATH : PLAY_PATH);
+    }
+    function setVolIcon(muted) {
+      document.getElementById('volIcon').querySelector('path').setAttribute('d', muted ? MUTE_PATH : VOL_PATH);
+    }
+
+    // ── Events ─────────────────────────────────────────────────────────────
+    playBtn.addEventListener('click', () => vid.paused ? vid.play() : vid.pause());
+    vid.addEventListener('play',  () => setPlayIcon(true));
+    vid.addEventListener('pause', () => setPlayIcon(false));
+    vid.addEventListener('ended', () => setPlayIcon(false));
+
+    vid.addEventListener('timeupdate', () => {
+      if (!vid.duration) return;
+      const p = (vid.currentTime / vid.duration) * 100;
+      progressFill.style.width = p + '%';
+      seekBar.value = p;
+      curTime.textContent = fmt(vid.currentTime);
+      updateActiveChapter();
+    });
+
+    vid.addEventListener('loadedmetadata', () => {
+      durTime.textContent = fmt(vid.duration);
+    });
+
+    seekBar.addEventListener('input', () => {
+      vid.currentTime = (seekBar.value / 100) * vid.duration;
+    });
+
+    skipBack.addEventListener('click', () => { vid.currentTime = Math.max(0, vid.currentTime - 10); });
+    skipFwd.addEventListener('click',  () => { vid.currentTime = Math.min(vid.duration, vid.currentTime + 10); });
+
+    muteBtn.addEventListener('click', () => {
+      vid.muted = !vid.muted;
+      setVolIcon(vid.muted);
+    });
+    volBar.addEventListener('input', () => {
+      vid.volume = volBar.value;
+      setVolIcon(vid.volume === 0);
+    });
+
+    const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    let speedIdx = 2;
+    speedBtn.addEventListener('click', () => {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      vid.playbackRate = speeds[speedIdx];
+      speedBtn.textContent = speeds[speedIdx] + '×';
+    });
+
+    fsBtn.addEventListener('click', () => {
+      const wrap = document.querySelector('.player-wrap');
+      if (!document.fullscreenElement) wrap.requestFullscreen();
+      else document.exitFullscreen();
+    });
+
+    // Space bar → play/pause
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        vid.paused ? vid.play() : vid.pause();
+      }
+    });
+  </script>
+</body>
+</html>
