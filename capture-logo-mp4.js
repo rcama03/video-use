@@ -16,6 +16,33 @@ if (!fs.existsSync(DIR)) fs.mkdirSync(DIR, { recursive: true });
     'var DPR = 2;'
   );
 
+  // Top-right corner: mirror CX from left-130 to right-130
+  html = html.replace('var CX=130, CY=130;', 'var CX=1790, CY=130;');
+
+  // Bigger text: fill the full annular band (RO-RI ≈ 40px)
+  // fREISE: RT*0.27→RT*0.50 (~38px), fINSIDER: RT*0.23→RT*0.44 (~33px)
+  html = html.replace(
+    'var fREISE   = Math.round(RT*0.27);\n  var fINSIDER = Math.round(RT*0.23);',
+    'var fREISE   = Math.round(RT*0.50);\n  var fINSIDER = Math.round(RT*0.44);'
+  );
+  // Tighten spacing to fit larger glyphs around the arc
+  html = html.replace(
+    "arcTextGlow('REISE',   RT, -Math.PI/2, false, '#00aaff', fREISE,   5, 8+4*glow);",
+    "arcTextGlow('REISE',   RT, -Math.PI/2, false, '#00aaff', fREISE,   1, 8+4*glow);"
+  );
+  html = html.replace(
+    "arcTextGlow('INSIDER', RT,  Math.PI/2, true,  '#ffaa00', fINSIDER, 3, 8+4*glow);",
+    "arcTextGlow('INSIDER', RT,  Math.PI/2, true,  '#ffaa00', fINSIDER, 1, 8+4*glow);"
+  );
+  html = html.replace(
+    "arcText(g, 'REISE',   RT, -Math.PI/2, false, '#ffffff', fREISE,   5);",
+    "arcText(g, 'REISE',   RT, -Math.PI/2, false, '#ffffff', fREISE,   1);"
+  );
+  html = html.replace(
+    "arcText(g, 'INSIDER', RT,  Math.PI/2, true,  '#ffd700', fINSIDER, 3);",
+    "arcText(g, 'INSIDER', RT,  Math.PI/2, true,  '#ffd700', fINSIDER, 1);"
+  );
+
   // Add black fill at the start of each frame (after clearRect) so MP4 has solid background
   html = html.replace(
     '// ── 1. Clear both canvases ──────────────────────\n  g.clearRect(0,0,W,H);\n  gg.clearRect(0,0,W,H);',
